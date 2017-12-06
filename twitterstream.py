@@ -1,10 +1,14 @@
+import argparse
 import json
 import oauth2 as oauth
 import os
 import sys
 import urllib2 as urllib
 
-# See Assignment 1 instructions or README for how to get these credentials
+parser = argparse.ArgumentParser(description='Fetch tweets')
+parser.add_argument('--max_tweets', action="store", dest="max_tweets", type=int, default=0)
+parser.add_argument('--location', action="store", dest="location", default=None)
+
 access_token_key = os.environ['ACCESS_TOKEN_KEY']
 access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
 
@@ -49,8 +53,11 @@ def twitterreq(url, method, parameters):
 
   return response
 
-def fetchsamples(max_tweets=100):
-  url = "https://stream.twitter.com/1.1/statuses/sample.json"
+def fetchsamples(max_tweets=0, location=None):
+  if location:
+    url = "https://stream.twitter.com/1.1/statuses/filter.json?locations=%s" % location
+  else:
+    url = "https://stream.twitter.com/1.1/statuses/sample.json" 
   parameters = []
   response = twitterreq(url, "GET", parameters)
   count = 0 
@@ -59,8 +66,9 @@ def fetchsamples(max_tweets=100):
         continue
     print line.strip()
     count = count + 1
-    if count > max_tweets:
+    if max_tweets != 0 and count > max_tweets:
         break
 
 if __name__ == '__main__':
-  fetchsamples(max_tweets=int(sys.argv[1]))
+  args = parser.parse_args()
+  fetchsamples(max_tweets=args.max_tweets, location=args.location)
